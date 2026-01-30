@@ -13,5 +13,6 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    // استخدمنا الإصدار الأساسي لضمان التوافق مع Gradle 8.4
+    implementation 'androidx.appcompat:appcompat:1.4.1'
 }

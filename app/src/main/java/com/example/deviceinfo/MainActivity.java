@@ -1,50 +1,44 @@
 package com.example.deviceinfo;
 
-import android.app.Activity;
+import android.os.Bundle;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView infoTextView = findViewById(R.id.infoTextView);
-        
-        // جلب معلومات البطارية
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
-        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
-        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
-        float batteryPct = (level / (float)scale) * 100;
+        TextView systemTV = findViewById(R.id.system_info);
+        TextView hardwareTV = findViewById(R.id.hardware_info);
 
-        // جلب معلومات الرام (RAM)
+        // جلب معلومات النظام
+        String sysInfo = "الشركة: " + android.os.Build.MANUFACTURER + "\n" +
+                         "الموديل: " + android.os.Build.MODEL + "\n" +
+                         "إصدار الأندرويد: " + android.os.Build.VERSION.RELEASE + "\n" +
+                         "المعالج: " + android.os.Build.BOARD;
+
+        // جلب البطارية والرام
+        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : 0;
+
         ActivityManager actManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
         actManager.getMemoryInfo(memInfo);
-        long totalMemory = memInfo.totalMem / (1024 * 1024); // تحويل لميجابايت
+        long totalRam = memInfo.totalMem / (1024 * 1024);
 
-        String info = "--- معلومات النظام ---\n" +
-                "الشركة: " + Build.MANUFACTURER + "\n" +
-                "الموديل: " + Build.MODEL + "\n" +
-                "إصدار الأندرويد: " + Build.VERSION.RELEASE + "\n" +
-                "المعالج (Board): " + Build.BOARD + "\n\n" +
-                "--- حالة العتاد ---\n" +
-                "البطارية: " + (int)batteryPct + "%\n" +
-                "الرام الكلية: " + totalMemory + " MB\n" +
-                "النواة: " + System.getProperty("os.arch") + "\n\n" +
-                "--- هويّة الجهاز ---\n" +
-                "المنتج: " + Build.PRODUCT + "\n" +
-                "الهاردوير: " + Build.HARDWARE + "\n" +
-                "رقم البناء: " + Build.ID;
+        String hardInfo = "نسبة البطارية: " + level + "%\n" +
+                          "الرام الكلية: " + totalRam + " MB\n" +
+                          "النواة: " + System.getProperty("os.arch");
 
-        infoTextView.setText(info);
+        systemTV.setText(sysInfo);
+        hardwareTV.setText(hardInfo);
     }
 }

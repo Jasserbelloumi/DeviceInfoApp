@@ -1,14 +1,89 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="#0F1014">
 
-    <TextView
-        android:id="@+id/infoTextView"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="جاري جلب المعلومات..."
-        android:textSize="14sp"
-        android:fontFamily="monospace" />
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="مواصفات الجهاز"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="right"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            android:layout_marginBottom="16dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#2A2C32"
+            app:cardBackgroundColor="#1A1C22">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ℹ️ معلومات النظام"
+                    android:textColor="#8B5CF6"
+                    android:textStyle="bold"
+                    android:layout_gravity="right"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2C32" android:layout_marginVertical="12dp"/>
+                <TextView android:id="@+id/system_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#C9CED9"
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="6dp"
+                    android:gravity="right"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#2A2C32"
+            app:cardBackgroundColor="#1A1C22">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔋 حالة العتاد"
+                    android:textColor="#10B981"
+                    android:textStyle="bold"
+                    android:layout_gravity="right"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2C32" android:layout_marginVertical="12dp"/>
+                <TextView android:id="@+id/hardware_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#C9CED9"
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="6dp"
+                    android:gravity="right"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
 </ScrollView>

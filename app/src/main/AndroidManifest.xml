@@ -3,10 +3,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
 
     <application
         android:allowBackup="true"
-        android:label="Device Info Pro"
+        android:label="Pro Wallpapers"
         android:theme="@style/Theme.DeviceInfoApp">
 
         <meta-data

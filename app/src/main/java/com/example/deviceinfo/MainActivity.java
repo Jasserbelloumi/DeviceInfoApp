@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.FullScreenContentCallback;
@@ -27,7 +26,6 @@ import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -43,40 +41,50 @@ public class MainActivity extends AppCompatActivity {
     private List<String> imageUrls = new ArrayList<>();
     private InterstitialAd mInterstitialAd;
     private String selectedImageUrl = "";
+    
+    // مفتاح الـ API الخاص بك
+    private static final String API_KEY = "90|dUvCD5IBXxQZ2CPLRZalejdVaXixrIqEQoENF93L5301f5bc";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. تهيئة الإعلانات
+        // تهيئة الإعلانات
         MobileAds.initialize(this, initializationStatus -> {});
-        loadBannerAd();
+        
+        // تحميل البنر
+        AdView mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+        // تحميل الإعلان البيني
         loadInterstitialAd();
 
-        // 2. إعداد القائمة (Pinterest Style)
+        // إعداد القائمة
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         adapter = new WallpaperAdapter(imageUrls);
         recyclerView.setAdapter(adapter);
 
-        // 3. جلب الصور من السيرفر
+        // بدء جلب الصور
         new FetchWallpapersTask().execute();
     }
 
-    private void loadBannerAd() {
-        AdView mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-    }
-
-    // تحميل الإعلان البيني (Full Screen)
     private void loadInterstitialAd() {
         AdRequest adRequest = new AdRequest.Builder().build();
-        // ملاحظة: هذا ID تجريبي، استبدله بـ ID الحقيقي الخاص بك للإعلان البيني
-        // استخدمت "ca-app-pub-3940256099942544/1033173712" للتجربة (Test ID) لضمان عدم حظر حسابك أثناء التطوير
-        // عندما تجهز، ضع الـ ID الخاص بك من AdMob هنا
-        InterstitialAd.load(this,"ca-app-pub-3940256099942544/1033173712", adRequest,
+        
+        // هام جداً: استبدل النص أدناه بكود الوحدة الإعلانية البينية (Interstitial) من حساب AdMob الخاص بك
+        // الكود الذي في الصورة عندك هو للبنر فقط، يجب أن تنشئ واحد جديد للـ Interstitial
+        String myInterstitialId = "ca-app-pub-7500537470112334/YOUR_INTERSTITIAL_ID_HERE"; 
+        
+        // ملاحظة: إذا لم تضع الكود الصحيح، سيتم استخدام كود اختباري مؤقتاً لكي لا يتوقف التطبيق
+        // بمجرد أن تنشئ الوحدة، احذف هذا السطر واستخدم الكود الخاص بك
+        if (myInterstitialId.contains("YOUR_INTERSTITIAL")) {
+             myInterstitialId = "ca-app-pub-3940256099942544/1033173712"; // كود جوجل الاحتياطي
+        }
+
+        InterstitialAd.load(this, myInterstitialId, adRequest,
             new InterstitialAdLoadCallback() {
                 @Override
                 public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
@@ -84,9 +92,8 @@ public class MainActivity extends AppCompatActivity {
                     mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
                         @Override
                         public void onAdDismissedFullScreenContent() {
-                            // عندما يغلق المستخدم الإعلان، ننفذ الأمر (تعيين الخلفية)
                             setWallpaper(selectedImageUrl);
-                            loadInterstitialAd(); // تحميل إعلان جديد للمرة القادمة
+                            loadInterstitialAd(); // تحميل إعلان جديد
                         }
                     });
                 }
@@ -102,21 +109,20 @@ public class MainActivity extends AppCompatActivity {
         if (mInterstitialAd != null) {
             mInterstitialAd.show(MainActivity.this);
         } else {
-            // إذا لم يكن الإعلان جاهزاً، نفذ الأمر مباشرة
             setWallpaper(url);
         }
     }
 
     private void setWallpaper(String url) {
-        Toast.makeText(this, "جاري تعيين الخلفية...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "جاري ضبط الخلفية... 🎨", Toast.LENGTH_SHORT).show();
         Glide.with(this).asBitmap().load(url).into(new CustomTarget<Bitmap>() {
             @Override
             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                 try {
                     WallpaperManager.getInstance(getApplicationContext()).setBitmap(resource);
-                    Toast.makeText(MainActivity.this, "تم تعيين الخلفية بنجاح! ✅", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "تم تغيير الخلفية بنجاح! ✅", Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "فشل تعيين الخلفية", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "حدث خطأ!", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -124,78 +130,45 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // كلاس لجلب البيانات من API
-    private class FetchWallpapersTask extends AsyncTask<Void, Void, String> {
+    // جلب الصور من SourceSplash API
+    private class FetchWallpapersTask extends AsyncTask<Void, String, Void> {
         @Override
-        protected String doInBackground(Void... voids) {
+        protected Void doInBackground(Void... voids) {
             try {
-                // ملاحظة: بما أنني لا أملك التوثيق الدقيق للـ API الخاص بـ SourceSplash
-                // سأفترض أن هذا هو الرابط للصور الشائعة (Curated).
-                // إذا لم يعمل، تأكد من الـ Endpoint الصحيح من لوحة تحكم الموقع
-                URL url = new URL("https://www.sourcesplash.com/api/v1/curated?per_page=20"); 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                // إضافة الـ API Key في الهيدر
-                conn.setRequestProperty("Authorization", "Bearer 90|dUvCD5IBXxQZ2CPLRZalejdVaXixrIqEQoENF93L5301f5bc");
-                conn.connect();
-
-                // إذا فشل الاتصال بالموقع الخاص، نستخدم Pexels كاحتياط لضمان عمل التطبيق الآن
-                if (conn.getResponseCode() != 200) {
-                     return null; 
+                // سنجلب 15 صورة عشوائية لملء الشبكة
+                for (int i = 0; i < 15; i++) {
+                    URL url = new URL("https://www.sourcesplash.com/api/random");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
+                    
+                    if (conn.getResponseCode() == 200) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        StringBuilder result = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) result.append(line);
+                        
+                        // تحليل JSON حسب شرح الموقع: { "url": "..." }
+                        JSONObject jsonObject = new JSONObject(result.toString());
+                        if (jsonObject.has("url")) {
+                            publishProgress(jsonObject.getString("url"));
+                        }
+                    }
                 }
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    result.append(line);
-                }
-                return result.toString();
             } catch (Exception e) {
-                return null;
+                e.printStackTrace();
             }
+            return null;
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            if (result != null) {
-                try {
-                    // تحليل JSON (يعتمد على هيكل الرد المتوقع)
-                    JSONObject jsonObject = new JSONObject(result);
-                    // نتوقع مصفوفة باسم data أو photos
-                    JSONArray photos = jsonObject.has("data") ? jsonObject.getJSONArray("data") : jsonObject.getJSONArray("photos");
-                    
-                    for (int i = 0; i < photos.length(); i++) {
-                        JSONObject photo = photos.getJSONObject(i);
-                        // نحاول إيجاد رابط الصورة بأكثر من صيغة محتملة
-                        String imgUrl = "";
-                        if (photo.has("src")) {
-                            imgUrl = photo.getJSONObject("src").getString("large");
-                        } else if (photo.has("url")) {
-                            imgUrl = photo.getString("url");
-                        } else if (photo.has("large_url")) { // صيغة SourceSplash المحتملة
-                             imgUrl = photo.getString("large_url");
-                        }
-                        
-                        if (!imgUrl.isEmpty()) imageUrls.add(imgUrl);
-                    }
-                    adapter.notifyDataSetChanged();
-                } catch (Exception e) {
-                     Log.e("API", "Error parsing JSON", e);
-                }
-            } else {
-                // بيانات وهمية للاختبار في حال فشل الـ API
-                imageUrls.add("https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=600");
-                imageUrls.add("https://images.pexels.com/photos/1624496/pexels-photo-1624496.jpeg?auto=compress&cs=tinysrgb&w=600");
-                imageUrls.add("https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=600");
-                imageUrls.add("https://images.pexels.com/photos/1166209/pexels-photo-1166209.jpeg?auto=compress&cs=tinysrgb&w=600");
-                adapter.notifyDataSetChanged();
-                Toast.makeText(MainActivity.this, "تم تحميل صور احتياطية (تأكد من الـ API)", Toast.LENGTH_LONG).show();
-            }
+        protected void onProgressUpdate(String... values) {
+            imageUrls.add(values[0]);
+            adapter.notifyItemInserted(imageUrls.size() - 1);
         }
     }
 
-    // الأدابتير الخاص بالقائمة
+    // RecyclerView Adapter
     private class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.ViewHolder> {
         private List<String> urls;
         public WallpaperAdapter(List<String> urls) { this.urls = urls; }
@@ -211,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
             String url = urls.get(position);
             Glide.with(holder.imageView.getContext())
                  .load(url)
-                 .placeholder(android.R.drawable.ic_menu_gallery)
+                 .placeholder(android.R.drawable.ic_menu_gallery) // صورة مؤقتة أثناء التحميل
                  .into(holder.imageView);
             
             holder.itemView.setOnClickListener(v -> onImageClicked(url));

@@ -8,9 +8,9 @@
         android:id="@+id/headerTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="4K Wallpapers"
+        android:text="Wallpapers Hub"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:padding="16dp"
         android:background="#0F1014"/>

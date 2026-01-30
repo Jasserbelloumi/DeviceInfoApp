@@ -19,26 +19,30 @@ public class MainActivity extends AppCompatActivity {
         TextView systemTV = findViewById(R.id.system_info);
         TextView hardwareTV = findViewById(R.id.hardware_info);
 
-        // جلب معلومات النظام
-        String sysInfo = "الشركة: " + android.os.Build.MANUFACTURER + "\n" +
-                         "الموديل: " + android.os.Build.MODEL + "\n" +
-                         "إصدار الأندرويد: " + android.os.Build.VERSION.RELEASE + "\n" +
-                         "المعالج: " + android.os.Build.BOARD;
+        try {
+            // معلومات النظام
+            String sysInfo = "الشركة: " + android.os.Build.MANUFACTURER + "\n" +
+                             "الموديل: " + android.os.Build.MODEL + "\n" +
+                             "إصدار الأندرويد: " + android.os.Build.VERSION.RELEASE;
+            systemTV.setText(sysInfo);
 
-        // جلب البطارية والرام
-        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : 0;
+            // معلومات البطارية والرام
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, ifilter);
+            int level = (batteryStatus != null) ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : 0;
 
-        ActivityManager actManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
-        actManager.getMemoryInfo(memInfo);
-        long totalRam = memInfo.totalMem / (1024 * 1024);
+            ActivityManager actManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+            actManager.getMemoryInfo(memInfo);
+            long totalRam = memInfo.totalMem / (1024 * 1024);
 
-        String hardInfo = "نسبة البطارية: " + level + "%\n" +
-                          "الرام الكلية: " + totalRam + " MB\n" +
-                          "النواة: " + System.getProperty("os.arch");
-
-        systemTV.setText(sysInfo);
-        hardwareTV.setText(hardInfo);
+            String hardInfo = "نسبة البطارية: " + level + "%\n" +
+                              "الرام الكلية: " + totalRam + " MB\n" +
+                              "النواة: " + System.getProperty("os.arch");
+            hardwareTV.setText(hardInfo);
+            
+        } catch (Exception e) {
+            systemTV.setText("خطأ في جلب البيانات: " + e.getMessage());
+        }
     }
 }

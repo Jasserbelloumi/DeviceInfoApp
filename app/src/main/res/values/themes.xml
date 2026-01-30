@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.DeviceInfoApp" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#8B5CF6</item>
+        <item name="android:statusBarColor">#0F1014</item>
+    </style>
+</resources>

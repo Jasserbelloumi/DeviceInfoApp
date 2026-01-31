@@ -6,7 +6,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/APP"
+        android:icon="@drawable/ssss"
         android:label="VIP Wallpapers"
         android:theme="@style/Theme.DeviceInfoApp">
 

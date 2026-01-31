@@ -2,203 +2,126 @@ package com.example.deviceinfo;
 
 import android.app.WallpaperManager;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.FullScreenContentCallback;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.*;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private WallpaperAdapter adapter;
     private List<String> imageUrls = new ArrayList<>();
     private InterstitialAd mInterstitialAd;
-    private String selectedImageUrl = "";
-    
-    // مفتاح الـ API الخاص بك
-    private static final String API_KEY = "90|dUvCD5IBXxQZ2CPLRZalejdVaXixrIqEQoENF93L5301f5bc";
+    private String currentSearch = "wallpaper";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // تهيئة الإعلانات
-        MobileAds.initialize(this, initializationStatus -> {});
-        
-        // تحميل البنر
-        AdView mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+        MobileAds.initialize(this, status -> {});
+        loadBanner();
+        loadInterstitial();
 
-        // تحميل الإعلان البيني
-        loadInterstitialAd();
-
-        // إعداد القائمة
         recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-        adapter = new WallpaperAdapter(imageUrls);
-        recyclerView.setAdapter(adapter);
-
-        // بدء جلب الصور
-        new FetchWallpapersTask().execute();
-    }
-
-    private void loadInterstitialAd() {
-        AdRequest adRequest = new AdRequest.Builder().build();
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, 1));
         
-        // هام جداً: استبدل النص أدناه بكود الوحدة الإعلانية البينية (Interstitial) من حساب AdMob الخاص بك
-        // الكود الذي في الصورة عندك هو للبنر فقط، يجب أن تنشئ واحد جديد للـ Interstitial
-        String myInterstitialId = "ca-app-pub-7500537470112334/YOUR_INTERSTITIAL_ID_HERE"; 
-        
-        // ملاحظة: إذا لم تضع الكود الصحيح، سيتم استخدام كود اختباري مؤقتاً لكي لا يتوقف التطبيق
-        // بمجرد أن تنشئ الوحدة، احذف هذا السطر واستخدم الكود الخاص بك
-        if (myInterstitialId.contains("YOUR_INTERSTITIAL")) {
-             myInterstitialId = "ca-app-pub-3940256099942544/1033173712"; // كود جوجل الاحتياطي
-        }
+        loadPhotos("nature"); // تحميل صور افتراضية عند الفتح
 
-        InterstitialAd.load(this, myInterstitialId, adRequest,
-            new InterstitialAdLoadCallback() {
-                @Override
-                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                    mInterstitialAd = interstitialAd;
-                    mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
-                        @Override
-                        public void onAdDismissedFullScreenContent() {
-                            setWallpaper(selectedImageUrl);
-                            loadInterstitialAd(); // تحميل إعلان جديد
-                        }
-                    });
-                }
-                @Override
-                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    mInterstitialAd = null;
-                }
-            });
-    }
-
-    private void onImageClicked(String url) {
-        selectedImageUrl = url;
-        if (mInterstitialAd != null) {
-            mInterstitialAd.show(MainActivity.this);
-        } else {
-            setWallpaper(url);
-        }
-    }
-
-    private void setWallpaper(String url) {
-        Toast.makeText(this, "جاري ضبط الخلفية... 🎨", Toast.LENGTH_SHORT).show();
-        Glide.with(this).asBitmap().load(url).into(new CustomTarget<Bitmap>() {
+        SearchView searchView = findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                try {
-                    WallpaperManager.getInstance(getApplicationContext()).setBitmap(resource);
-                    Toast.makeText(MainActivity.this, "تم تغيير الخلفية بنجاح! ✅", Toast.LENGTH_LONG).show();
-                } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "حدث خطأ!", Toast.LENGTH_SHORT).show();
-                }
+            public boolean onQueryTextSubmit(String query) {
+                loadPhotos(query);
+                return true;
             }
             @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {}
+            public boolean onQueryTextChange(String newText) { return false; }
         });
     }
 
-    // جلب الصور من SourceSplash API
-    private class FetchWallpapersTask extends AsyncTask<Void, String, Void> {
-        @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                // سنجلب 15 صورة عشوائية لملء الشبكة
-                for (int i = 0; i < 15; i++) {
-                    URL url = new URL("https://www.sourcesplash.com/api/random");
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
-                    
-                    if (conn.getResponseCode() == 200) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder result = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) result.append(line);
-                        
-                        // تحليل JSON حسب شرح الموقع: { "url": "..." }
-                        JSONObject jsonObject = new JSONObject(result.toString());
-                        if (jsonObject.has("url")) {
-                            publishProgress(jsonObject.getString("url"));
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
+    private void loadPhotos(String query) {
+        imageUrls.clear();
+        Random r = new Random();
+        // خدعة جلب 30 رابط بحث مباشر بدون تخزين
+        for (int i = 0; i < 30; i++) {
+            imageUrls.add("https://source.unsplash.com/featured/?" + query + "," + r.nextInt(1000));
         }
+        recyclerView.setAdapter(new WallpaperAdapter(imageUrls));
+    }
 
-        @Override
-        protected void onProgressUpdate(String... values) {
-            imageUrls.add(values[0]);
-            adapter.notifyItemInserted(imageUrls.size() - 1);
+    private void loadBanner() {
+        AdView adView = findViewById(R.id.adView);
+        adView.loadAd(new AdRequest.Builder().build());
+    }
+
+    private void loadInterstitial() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+        // تأكد من وضع ID الإعلان البيني الحقيقي هنا للربح
+        InterstitialAd.load(this, "ca-app-pub-3940256099942544/1033173712", adRequest, new InterstitialAdLoadCallback() {
+            @Override
+            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) { mInterstitialAd = interstitialAd; }
+        });
+    }
+
+    private void setWallpaper(String url) {
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show(this);
+            mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                @Override
+                public void onAdDismissedFullScreenContent() {
+                    downloadAndSet(url);
+                    loadInterstitial();
+                }
+            });
+        } else {
+            downloadAndSet(url);
         }
     }
 
-    // RecyclerView Adapter
-    private class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.ViewHolder> {
-        private List<String> urls;
-        public WallpaperAdapter(List<String> urls) { this.urls = urls; }
-
-        @NonNull @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_wallpaper, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            String url = urls.get(position);
-            Glide.with(holder.imageView.getContext())
-                 .load(url)
-                 .placeholder(android.R.drawable.ic_menu_gallery) // صورة مؤقتة أثناء التحميل
-                 .into(holder.imageView);
-            
-            holder.itemView.setOnClickListener(v -> onImageClicked(url));
-        }
-
-        @Override
-        public int getItemCount() { return urls.size(); }
-
-        class ViewHolder extends RecyclerView.ViewHolder {
-            ImageView imageView;
-            ViewHolder(View itemView) {
-                super(itemView);
-                imageView = itemView.findViewById(R.id.wallpaper_image);
+    private void downloadAndSet(String url) {
+        Toast.makeText(this, "جاري التحميل والتعيين... ⏳", Toast.LENGTH_SHORT).show();
+        Glide.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
+            @Override
+            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                try {
+                    WallpaperManager.getInstance(MainActivity.this).setBitmap(resource);
+                    Toast.makeText(MainActivity.this, "تم بنجاح! ✅", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        });
+    }
+
+    private class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.VH> {
+        List<String> list;
+        WallpaperAdapter(List<String> list) { this.list = list; }
+        @NonNull @Override public VH onCreateViewHolder(@NonNull ViewGroup p, int t) {
+            return new VH(LayoutInflater.from(p.getContext()).inflate(R.layout.item_wallpaper, p, false));
+        }
+        @Override public void onBindViewHolder(@NonNull VH h, int p) {
+            Glide.with(h.img).load(list.get(p)).centerCrop().into(h.img);
+            h.itemView.setOnClickListener(v -> setWallpaper(list.get(p)));
+        }
+        @Override public int getItemCount() { return list.size(); }
+        class VH extends RecyclerView.ViewHolder {
+            ImageView img;
+            VH(View v) { super(v); img = v.findViewById(R.id.wallpaper_image); }
         }
     }
 }

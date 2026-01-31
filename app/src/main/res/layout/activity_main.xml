@@ -2,42 +2,54 @@
     xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="#0F0F0F">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/searchCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        ads:cardCornerRadius="25dp"
-        ads:cardBackgroundColor="#1E1E1E"
-        ads:cardElevation="8dp">
-
+        android:layout_margin="10dp"
+        ads:cardCornerRadius="20dp"
+        ads:cardBackgroundColor="#1A1A1A">
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            ads:iconifiedByDefault="false"
-            ads:queryHint="ابحث عن: Cars, Nature, Anime..."
-            ads:searchIcon="@android:drawable/ic_menu_search" />
+            ads:queryHint="بحث عن خلفيات..."
+            ads:iconifiedByDefault="false" />
     </androidx.cardview.widget.CardView>
+
+    <HorizontalScrollView
+        android:id="@+id/catScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/searchCard"
+        android:scrollbars="none"
+        android:padding="5dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button android:id="@+id/btnCars" android:layout_width="wrap_content" android:layout_height="40dp" android:text="Cars" android:textAllCaps="false" android:backgroundTint="#333" android:layout_margin="5dp"/>
+            <Button android:id="@+id/btnAnime" android:layout_width="wrap_content" android:layout_height="40dp" android:text="Anime" android:textAllCaps="false" android:backgroundTint="#333" android:layout_margin="5dp"/>
+            <Button android:id="@+id/btnNature" android:layout_width="wrap_content" android:layout_height="40dp" android:text="Nature" android:textAllCaps="false" android:backgroundTint="#333" android:layout_margin="5dp"/>
+            <Button android:id="@+id/btnDark" android:layout_width="wrap_content" android:layout_height="40dp" android:text="Dark" android:textAllCaps="false" android:backgroundTint="#333" android:layout_margin="5dp"/>
+        </LinearLayout>
+    </HorizontalScrollView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/searchCard"
-        android:layout_above="@id/adView"
-        android:clipToPadding="false"
-        android:padding="4dp"/>
+        android:layout_below="@id/catScroll"
+        android:layout_above="@id/adView" />
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         ads:adSize="BANNER"
         ads:adUnitId="ca-app-pub-7500537470112334/4696609974" />
-
 </RelativeLayout>

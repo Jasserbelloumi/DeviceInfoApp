@@ -2,38 +2,33 @@
     xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0F1014">
+    android:background="#121212">
 
-    <LinearLayout
-        android:id="@+id/searchBar"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/searchCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="10dp">
-        
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ابحث عن خلفيتك المفضلة"
-            android:textColor="#FFFFFF"
-            android:layout_gravity="right"
-            android:layout_marginBottom="8dp"/>
+        android:layout_margin="12dp"
+        ads:cardCornerRadius="25dp"
+        ads:cardBackgroundColor="#1E1E1E"
+        ads:cardElevation="8dp">
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/search_bg"
             ads:iconifiedByDefault="false"
-            ads:queryHint="مثلاً: Nature, Cars, Anime..."/>
-    </LinearLayout>
+            ads:queryHint="ابحث عن: Cars, Nature, Anime..."
+            ads:searchIcon="@android:drawable/ic_menu_search" />
+    </androidx.cardview.widget.CardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/searchBar"
+        android:layout_below="@id/searchCard"
         android:layout_above="@id/adView"
+        android:clipToPadding="false"
         android:padding="4dp"/>
 
     <com.google.android.gms.ads.AdView
@@ -43,7 +38,6 @@
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-7500537470112334/4696609974">
-    </com.google.android.gms.ads.AdView>
+        ads:adUnitId="ca-app-pub-7500537470112334/4696609974" />
 
 </RelativeLayout>

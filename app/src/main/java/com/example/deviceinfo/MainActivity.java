@@ -28,30 +28,34 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<String> imageUrls = new ArrayList<>();
     private InterstitialAd mInterstitialAd;
+    private WallpaperAdapter adapter;
+    
+    // معرفات إعلاناتك الحقيقية
+    private final String BANNER_ID = "ca-app-pub-7500537470112334/4696609974";
+    // ملاحظة: ضع هنا كود الـ Interstitial الحقيقي الذي أنشأته
+    private final String INTER_ID = "ca-app-pub-7500537470112334/ضع_هنا_كود_البيني"; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // تهيئة الإعلانات مع معالجة الخطأ
-        try {
-            MobileAds.initialize(this, status -> {});
-            loadBanner();
-            loadInterstitial();
-        } catch (Exception e) {}
+        MobileAds.initialize(this, status -> {});
+        loadBanner();
+        loadInterstitial();
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, 1));
+        adapter = new WallpaperAdapter(imageUrls);
+        recyclerView.setAdapter(adapter);
         
-        // تحميل صور أولية (خلفيات منوعة)
-        loadPhotos("wallpaper");
+        loadPhotos("modern wallpaper"); // تحميل صور عند البداية
 
         SearchView searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                // عرض إعلان قبل البحث لزيادة الربح
+                // إظهار إعلان إجباري عند كل بحث لزيادة الربح
                 showAdsAndRun(() -> loadPhotos(query));
                 return true;
             }
@@ -67,12 +71,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadInterstitial() {
         AdRequest adRequest = new AdRequest.Builder().build();
-        // الكود التجريبي للـ Interstitial (استبدله بكودك الحقيقي لاحقاً)
-        InterstitialAd.load(this, "ca-app-pub-3940256099942544/1033173712", adRequest, new InterstitialAdLoadCallback() {
+        InterstitialAd.load(this, INTER_ID, adRequest, new InterstitialAdLoadCallback() {
             @Override
-            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                mInterstitialAd = interstitialAd;
-            }
+            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) { mInterstitialAd = interstitialAd; }
         });
     }
 
@@ -80,46 +81,35 @@ public class MainActivity extends AppCompatActivity {
         if (mInterstitialAd != null) {
             mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
-                public void onAdDismissedFullScreenContent() {
-                    action.run();
-                    loadInterstitial();
-                }
+                public void onAdDismissedFullScreenContent() { action.run(); loadInterstitial(); }
                 @Override
-                public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
-                    action.run();
-                }
+                public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) { action.run(); }
             });
             mInterstitialAd.show(this);
-        } else {
-            action.run();
-            loadInterstitial();
-        }
+        } else { action.run(); loadInterstitial(); }
     }
 
     private void loadPhotos(String query) {
         imageUrls.clear();
         Random r = new Random();
-        // استخدام روابط مستقرة من Lorempicsum و Unsplash Source البديل
-        for (int i = 0; i < 30; i++) {
-            int randomId = r.nextInt(1000);
-            // هذا الرابط يضمن ظهور صورة عشوائية دائماً بناءً على كلمة البحث
-            imageUrls.add("https://loremflickr.com/600/1000/" + query + "?lock=" + randomId);
+        // جلب 50 صورة مختلفة في كل عملية بحث
+        for (int i = 0; i < 50; i++) {
+            imageUrls.add("https://loremflickr.com/600/1000/" + query.trim() + "?lock=" + r.nextInt(10000));
         }
-        recyclerView.setAdapter(new WallpaperAdapter(imageUrls));
+        adapter.notifyDataSetChanged();
+        recyclerView.scrollToPosition(0);
     }
 
     private void setWallpaper(String url) {
         showAdsAndRun(() -> {
-            Toast.makeText(this, "جاري تحميل الخلفية... ⏳", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "جاري التثبيت... ✅", Toast.LENGTH_SHORT).show();
             Glide.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
                 @Override
                 public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                     try {
                         WallpaperManager.getInstance(MainActivity.this).setBitmap(resource);
-                        Toast.makeText(MainActivity.this, "تم تغيير الخلفية! ✅", Toast.LENGTH_LONG).show();
-                    } catch (Exception e) {
-                        Toast.makeText(MainActivity.this, "فشل تعيين الصورة", Toast.LENGTH_SHORT).show();
-                    }
+                        Toast.makeText(MainActivity.this, "تم تعيين الخلفية!", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) { e.printStackTrace(); }
                 }
             });
         });
@@ -132,14 +122,7 @@ public class MainActivity extends AppCompatActivity {
             return new VH(LayoutInflater.from(p.getContext()).inflate(R.layout.item_wallpaper, p, false));
         }
         @Override public void onBindViewHolder(@NonNull VH h, int p) {
-            // استخدام Glide مع التحميل الذكي
-            Glide.with(h.img.getContext())
-                .load(list.get(p))
-                .centerCrop()
-                .placeholder(android.R.drawable.progress_horizontal)
-                .error(android.R.drawable.stat_notify_error)
-                .into(h.img);
-            
+            Glide.with(h.img).load(list.get(p)).centerCrop().into(h.img);
             h.itemView.setOnClickListener(v -> setWallpaper(list.get(p)));
         }
         @Override public int getItemCount() { return list.size(); }

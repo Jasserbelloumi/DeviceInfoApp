@@ -28,7 +28,11 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<String> imageUrls = new ArrayList<>();
     private InterstitialAd mInterstitialAd;
-    private String currentSearch = "wallpaper";
+    
+    // معرفات الإعلانات الحقيقية الخاصة بك
+    private final String BANNER_ID = "ca-app-pub-7500537470112334/4696609974";
+    // ملاحظة: يفضل إنشاء وحدة Interstitial خاصة بك ووضعها هنا
+    private final String INTERSTITIAL_ID = "ca-app-pub-3940256099942544/1033173712"; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,19 +40,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         MobileAds.initialize(this, status -> {});
+        
         loadBanner();
-        loadInterstitial();
+        loadInterstitial(); // تحميل أول إعلان شاشة كاملة
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, 1));
         
-        loadPhotos("nature"); // تحميل صور افتراضية عند الفتح
+        loadPhotos("wallpaper"); 
 
         SearchView searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                loadPhotos(query);
+                showInterstitialThenAction(() -> loadPhotos(query)); // إعلان قبل البحث
                 return true;
             }
             @Override
@@ -56,55 +61,60 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void loadPhotos(String query) {
-        imageUrls.clear();
-        Random r = new Random();
-        // خدعة جلب 30 رابط بحث مباشر بدون تخزين
-        for (int i = 0; i < 30; i++) {
-            imageUrls.add("https://source.unsplash.com/featured/?" + query + "," + r.nextInt(1000));
-        }
-        recyclerView.setAdapter(new WallpaperAdapter(imageUrls));
-    }
-
     private void loadBanner() {
         AdView adView = findViewById(R.id.adView);
+        adView.setAdUnitId(BANNER_ID);
         adView.loadAd(new AdRequest.Builder().build());
     }
 
     private void loadInterstitial() {
         AdRequest adRequest = new AdRequest.Builder().build();
-        // تأكد من وضع ID الإعلان البيني الحقيقي هنا للربح
-        InterstitialAd.load(this, "ca-app-pub-3940256099942544/1033173712", adRequest, new InterstitialAdLoadCallback() {
+        InterstitialAd.load(this, INTERSTITIAL_ID, adRequest, new InterstitialAdLoadCallback() {
             @Override
-            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) { mInterstitialAd = interstitialAd; }
+            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                mInterstitialAd = interstitialAd;
+            }
         });
     }
 
-    private void setWallpaper(String url) {
+    // وظيفة سحرية: تعرض إعلان وإذا انتهى تنفذ الأمر المطلوب
+    private void showInterstitialThenAction(Runnable action) {
         if (mInterstitialAd != null) {
-            mInterstitialAd.show(this);
             mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
                 public void onAdDismissedFullScreenContent() {
-                    downloadAndSet(url);
-                    loadInterstitial();
+                    action.run();
+                    loadInterstitial(); // تحميل الإعلان التالي فوراً
                 }
             });
+            mInterstitialAd.show(this);
         } else {
-            downloadAndSet(url);
+            action.run();
+            loadInterstitial();
         }
     }
 
-    private void downloadAndSet(String url) {
-        Toast.makeText(this, "جاري التحميل والتعيين... ⏳", Toast.LENGTH_SHORT).show();
-        Glide.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
-            @Override
-            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                try {
-                    WallpaperManager.getInstance(MainActivity.this).setBitmap(resource);
-                    Toast.makeText(MainActivity.this, "تم بنجاح! ✅", Toast.LENGTH_SHORT).show();
-                } catch (Exception e) { e.printStackTrace(); }
-            }
+    private void loadPhotos(String query) {
+        imageUrls.clear();
+        Random r = new Random();
+        for (int i = 0; i < 40; i++) { // زيادة عدد الصور المعروضة
+            imageUrls.add("https://source.unsplash.com/featured/?" + query + "," + r.nextInt(5000));
+        }
+        recyclerView.setAdapter(new WallpaperAdapter(imageUrls));
+    }
+
+    private void setWallpaper(String url) {
+        showInterstitialThenAction(() -> {
+            Toast.makeText(this, "جاري معالجة الصورة... ✨", Toast.LENGTH_SHORT).show();
+            Glide.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                    try {
+                        WallpaperManager.getInstance(MainActivity.this).setBitmap(resource);
+                        Toast.makeText(MainActivity.this, "تم التعيين بنجاح! ✅", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+            });
         });
     }
 
@@ -115,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             return new VH(LayoutInflater.from(p.getContext()).inflate(R.layout.item_wallpaper, p, false));
         }
         @Override public void onBindViewHolder(@NonNull VH h, int p) {
-            Glide.with(h.img).load(list.get(p)).centerCrop().into(h.img);
+            Glide.with(h.img).load(list.get(p)).thumbnail(0.1f).centerCrop().into(h.img);
             h.itemView.setOnClickListener(v -> setWallpaper(list.get(p)));
         }
         @Override public int getItemCount() { return list.size(); }

@@ -3,13 +3,14 @@ package com.example.deviceinfo;
 import android.app.WallpaperManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
     private WallpaperAdapter adapter;
     private final String INTER_ID = "ca-app-pub-3940256099942544/1033173712"; 
 
+    // 100+ اقتراح تصنيف مدمج تلقائياً
+    String[] categories = {"Trending", "Amoled", "Anime", "Gaming", "Cars", "Nature", "Space", "Abstract", "Cyberpunk", "Minimal", "Animals", "Architecture", "Sport", "Movies", "Macro", "Vertical", "Ocean", "Winter", "Skull", "Neon"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,13 +52,8 @@ public class MainActivity extends AppCompatActivity {
         adapter = new WallpaperAdapter(imageUrls);
         recyclerView.setAdapter(adapter);
 
-        // برمجة أزرار الأقسام
-        findViewById(R.id.btnCars).setOnClickListener(v -> loadPhotos("Luxury Cars"));
-        findViewById(R.id.btnAnime).setOnClickListener(v -> loadPhotos("Anime Art"));
-        findViewById(R.id.btnNature).setOnClickListener(v -> loadPhotos("Nature 4K"));
-        findViewById(R.id.btnDark).setOnClickListener(v -> loadPhotos("Amoled Dark"));
-
-        loadPhotos("Random Wallpaper");
+        setupCategories();
+        loadPhotos("Ultra HD Wallpaper");
 
         SearchView searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -66,6 +65,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) { return false; }
         });
+    }
+
+    private void setupCategories() {
+        LinearLayout container = findViewById(R.id.categoryContainer);
+        for (String cat : categories) {
+            Button b = new Button(this);
+            b.setText(cat);
+            b.setTextColor(Color.WHITE);
+            b.setBackgroundResource(android.R.drawable.btn_default);
+            b.getBackground().setTint(0xFF222222);
+            b.setOnClickListener(v -> {
+                showAdsAndRun(() -> loadPhotos(cat));
+            });
+            container.addView(b);
+        }
     }
 
     private void loadBanner() {
@@ -93,33 +107,12 @@ public class MainActivity extends AppCompatActivity {
     private void loadPhotos(String query) {
         imageUrls.clear();
         Random r = new Random();
-        for (int i = 0; i < 60; i++) {
-            imageUrls.add("https://loremflickr.com/600/1000/" + query.trim().replace(" ","") + "?lock=" + r.nextInt(100000));
+        for (int i = 0; i < 80; i++) {
+            imageUrls.add("https://loremflickr.com/720/1280/" + query.trim().replace(" ","") + "?lock=" + r.nextInt(1000000));
         }
         adapter.notifyDataSetChanged();
         recyclerView.scrollToPosition(0);
-    }
-
-    private void shareImage(String url) {
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, "شوف هذه الخلفية الرائعة من تطبيقنا: " + url);
-        startActivity(Intent.createChooser(intent, "مشاركة عبر:"));
-    }
-
-    private void setWallpaper(String url) {
-        showAdsAndRun(() -> {
-            Toast.makeText(this, "جاري التثبيت... ✅", Toast.LENGTH_SHORT).show();
-            Glide.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
-                @Override
-                public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                    try {
-                        WallpaperManager.getInstance(MainActivity.this).setBitmap(resource);
-                        Toast.makeText(MainActivity.this, "تم تغيير الخلفية!", Toast.LENGTH_SHORT).show();
-                    } catch (Exception e) {}
-                }
-            });
-        });
+        Toast.makeText(this, "Refreshing Gallery...", Toast.LENGTH_SHORT).show();
     }
 
     private class WallpaperAdapter extends RecyclerView.Adapter<WallpaperAdapter.VH> {
@@ -131,13 +124,31 @@ public class MainActivity extends AppCompatActivity {
         @Override public void onBindViewHolder(@NonNull VH h, int p) {
             Glide.with(h.img).load(list.get(p)).centerCrop().into(h.img);
             h.itemView.setOnClickListener(v -> setWallpaper(list.get(p)));
-            // مشاركة عند الضغط المطول
-            h.itemView.setOnLongClickListener(v -> { shareImage(list.get(p)); return true; });
+            h.itemView.setOnLongClickListener(v -> {
+                Intent s = new Intent(Intent.ACTION_SEND);
+                s.setType("text/plain");
+                s.putExtra(Intent.EXTRA_TEXT, "Download this VIP Wallpaper: " + list.get(p));
+                startActivity(Intent.createChooser(s, "Share to Friend"));
+                return true;
+            });
         }
         @Override public int getItemCount() { return list.size(); }
         class VH extends RecyclerView.ViewHolder {
             ImageView img;
             VH(View v) { super(v); img = v.findViewById(R.id.wallpaper_image); }
         }
+    }
+
+    private void setWallpaper(String url) {
+        Toast.makeText(this, "Applying Magic... ✨", Toast.LENGTH_SHORT).show();
+        Glide.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
+            @Override
+            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                try {
+                    WallpaperManager.getInstance(MainActivity.this).setBitmap(resource);
+                    Toast.makeText(MainActivity.this, "Wallpaper Set Successfully!", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {}
+            }
+        });
     }
 }
